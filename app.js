@@ -2,17 +2,13 @@ const express = require('express');
 const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
 
 
 const app = express();
 app.use(express.json());  //calling json method here basically returns a function, that func is then added to the middleware stack
 
-
-///////////////////////////////////////Creating our own middleware/////////////////////////////////////////
-app.use((req, res, next) => {
-    console.log("Hello from middleware");
-    next();
-});
 
 //now we will manipulate the req object---adding current time to the request(simply define a property on the req obj
 //and can then use that on any route handler to manipulate the req obj)
@@ -136,7 +132,7 @@ app.use(morgan('dev'))};  //calling this morgan function in return, returns the 
 //     })
 // };
 
-// const getUsers = (req, res) => {
+// const getUsers = (req, res) => { 
 //     res.status(500).json({
 //         status: "error",
 //         message: "This route is not defined yet"
@@ -207,6 +203,35 @@ app.use(morgan('dev'))};  //calling this morgan function in return, returns the 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter)
 
+//2.)creating the error or error obj
+app.all('*', (req,res,next) => {
+    // res.status(401).json({
+    //     status: "fail",
+    //     message: `can't find ${req.originalUrl} on this server`
+    // });
+    // next();
+
+    // const err = new Error(`can't find ${req.originalUrl} on this server`);
+    // err.status = "fail",
+    // err.statusCode = 400
+
+    // next(err);    //in this next() the err will be passed for the next error middleware handler function whereevr it 
+    //              //is. And in the next func. whenevr we pass anything, it will assume that it is an error and it will
+    //         // then skip all the middlewares in the middleware stack and sent the error that we passed in to the GEHF
+
+
+    next(new AppError(`can't find ${req.originalUrl} on this server`), 404)
+
+        })
+
+//Express comes with error handling middlewares 
+//creating global express error handling middleware.
+//in this we will have 2 steps- 1. writing the middleware(will hanlde all the errors coming from all over the 
+//application) and then 2. creating the err or err obj
+
+//1.) creating the middleware
+app.use(globalErrorHandler);
+
 
 //Most used API architecture: (Representational States Transfer is basically a way of building web APIs in a logical 
 //way, making them easy to consume)
@@ -234,4 +259,4 @@ module.exports = app;
 //now by defauly, express sets the environment to development.
 //in summary env variables are global variables that are used to define the environment in which a node app is running
 
-//process.env //nodejs also sets a lot of env varibaled
+//process.env //nodejs also sets a lot of env varibales
