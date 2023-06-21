@@ -116,3 +116,4 @@ module.exports = User
 
 //All these communication must happen over https
 //we can call this instance method on a user document
+//comment
